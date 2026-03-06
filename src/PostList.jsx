@@ -1,23 +1,26 @@
 import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchPosts, incrementPage } from "./postsSlice";
+import { fetchPostsAndUsers, incrementPage } from "./postsSlice";
 
 const PostList = () => {
   const dispatch = useDispatch();
   const posts = useSelector((state) => state.posts.posts);
   const status = useSelector((state) => state.posts.status);
+  const usersStatus = useSelector((state) => state.posts.usersStatus);
   const error = useSelector((state) => state.posts.error);
+  const usersError = useSelector((state) => state.posts.usersError);
   const page = useSelector((state) => state.posts.page);
+  const usersById = useSelector((state) => state.posts.usersById);
 
   useEffect(() => {
     if (status === "idle") {
-      dispatch(fetchPosts(page));
+      dispatch(fetchPostsAndUsers(page));
     }
   }, [dispatch, status, page]);
 
   const loadMorePosts = () => {
     dispatch(incrementPage());
-    dispatch(fetchPosts(page + 1));
+    dispatch(fetchPostsAndUsers(page + 1));
   };
 
   if (status === "loading") {
@@ -36,9 +39,15 @@ const PostList = () => {
           <h3>
             {post.id}. {post.title}
           </h3>
+          <p>
+            <strong>Author:</strong>{" "}
+            {usersById[post.userId]?.name ||
+              (usersStatus === "failed" ? "Unavailable" : "Loading author...")}
+          </p>
           <p>{post.body}</p>
         </div>
       ))}
+      {usersStatus === "failed" && <p>Could not load author details: {usersError}</p>}
       <button onClick={loadMorePosts}>Load More</button>
     </div>
   );
